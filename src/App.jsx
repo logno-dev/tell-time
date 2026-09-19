@@ -182,6 +182,25 @@ function describeWeather(code) {
   return { kind: 'cloudy', label: 'Cloudy' }
 }
 
+function getBiome(timeZone, location) {
+  const latitude = Number(location?.latitude)
+  const longitude = Number(location?.longitude)
+  const isTexas = location?.admin1?.toLowerCase() === 'texas'
+    || (Number.isFinite(latitude) && Number.isFinite(longitude)
+      && latitude >= 25.7 && latitude <= 36.6 && longitude >= -106.7 && longitude <= -93.5)
+  if (isTexas) return 'desert'
+
+  const zones = {
+    desert: ['America/Phoenix', 'America/Lima', 'Asia/Dubai', 'Africa/Cairo', 'Africa/Casablanca'],
+    tropical: ['America/Puerto_Rico', 'America/Sao_Paulo', 'Pacific/Pago_Pago', 'Pacific/Guam', 'Asia/Singapore', 'Asia/Bangkok', 'Africa/Lagos'],
+    coastal: ['America/Los_Angeles', 'Pacific/Honolulu', 'Europe/Lisbon', 'Asia/Tokyo', 'Asia/Hong_Kong', 'Australia/Sydney', 'Pacific/Auckland'],
+    mountain: ['America/Denver', 'America/Santiago', 'America/Bogota', 'Asia/Kolkata'],
+    tundra: ['America/Anchorage', 'America/Adak', 'Europe/Moscow'],
+    savanna: ['Africa/Nairobi', 'Africa/Johannesburg'],
+  }
+  return Object.entries(zones).find(([, zoneNames]) => zoneNames.includes(timeZone))?.[0] || 'temperate'
+}
+
 async function getWeatherData(latitude, longitude) {
   const cacheKey = `${latitude.toFixed(2)},${longitude.toFixed(2)},${WEATHER_UNIT}`
   const cached = weatherCache.get(cacheKey)
@@ -370,6 +389,71 @@ function WeatherBackground({ weather }) {
   )
 }
 
+function Landscape({ biome }) {
+  return (
+    <svg className={`landscape landscape--${biome}`} viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
+      <g className="landscape-distant">
+        {biome === 'mountain' || biome === 'tundra' ? (
+          <>
+            <path d="M0 205 L205 74 L330 171 L493 42 L690 196 L855 88 L1042 194 L1210 68 L1440 207 V300 H0 Z" />
+            {biome === 'tundra' && <path className="snowcaps" d="M153 107 L205 74 L248 107 L219 99 L204 116 L190 99 Z M438 89 L493 42 L548 96 L510 82 L490 105 L474 79 Z M1164 105 L1210 68 L1260 111 L1225 98 L1208 116 L1194 96 Z" />}
+          </>
+        ) : (
+          <path d="M0 211 Q150 120 315 190 Q475 103 651 193 Q839 91 1004 187 Q1202 111 1440 198 V300 H0 Z" />
+        )}
+      </g>
+
+      {biome === 'coastal' && (
+        <g className="landscape-water">
+          <path d="M0 205 Q230 191 470 207 T930 204 T1440 201 V300 H0 Z" />
+          <path className="wave" d="M0 224 Q95 211 190 224 T380 224 T570 224 T760 224 T950 224 T1140 224 T1330 224 T1520 224" />
+          <path className="wave wave--two" d="M-80 251 Q20 238 120 251 T320 251 T520 251 T720 251 T920 251 T1120 251 T1320 251 T1520 251" />
+        </g>
+      )}
+
+      <g className="landscape-near">
+        {biome !== 'coastal' && <path d="M0 246 Q197 174 391 231 Q581 162 775 232 Q1000 151 1191 227 Q1325 190 1440 216 V300 H0 Z" />}
+        {biome === 'coastal' && <path d="M0 251 Q150 180 328 236 L392 300 H0 Z M1110 300 Q1245 189 1440 232 V300 Z" />}
+      </g>
+
+      {biome === 'desert' && (
+        <g className="biome-details desert-details">
+          <path d="M0 249 Q215 185 430 244 T870 239 T1260 237 T1540 241 V300 H0 Z" />
+          <path className="cactus" d="M1182 246 V174 Q1182 161 1193 161 Q1204 161 1204 174 V193 H1218 V180 Q1218 171 1227 171 Q1236 171 1236 181 V204 Q1236 215 1225 215 H1204 V246 Z" />
+          <path className="cactus cactus--small" d="M256 254 V207 Q256 198 264 198 Q272 198 272 207 V218 H282 V211 Q282 204 289 204 Q296 204 296 212 V229 Q296 237 287 237 H272 V254 Z" />
+        </g>
+      )}
+
+      {(biome === 'tropical' || biome === 'coastal') && (
+        <g className="biome-details palm-details">
+          <path className="palm-trunk" d="M196 259 Q217 211 205 157" />
+          <path className="palm-leaves" d="M205 160 Q155 139 140 166 Q174 155 202 169 Q166 174 164 199 Q185 179 207 171 Q220 202 239 203 Q232 179 213 165 Q251 157 263 177 Q249 145 210 158 Q226 128 212 116 Q202 137 205 160 Z" />
+          <path className="palm-trunk palm-trunk--right" d="M1261 254 Q1246 213 1257 177" />
+          <path className="palm-leaves palm-leaves--right" d="M1257 179 Q1219 161 1205 181 Q1234 172 1255 186 Q1227 188 1227 207 Q1242 190 1260 187 Q1267 211 1284 213 Q1281 193 1265 182 Q1298 179 1307 197 Q1299 169 1262 177 Q1275 153 1264 143 Q1255 160 1257 179 Z" />
+        </g>
+      )}
+
+      {biome === 'savanna' && (
+        <g className="biome-details savanna-details">
+          <path className="acacia" d="M1104 257 V201 Q1072 200 1057 182 Q1086 184 1095 171 Q1112 181 1127 170 Q1142 186 1175 182 Q1161 201 1123 201 V257 Z" />
+          <path className="acacia acacia--small" d="M292 261 V224 Q272 223 261 211 Q280 212 286 203 Q297 211 307 204 Q316 215 337 212 Q327 225 307 224 V261 Z" />
+        </g>
+      )}
+
+      {(biome === 'temperate' || biome === 'mountain' || biome === 'tundra') && (
+        <g className="biome-details tree-details">
+          {[132, 184, 1088, 1143, 1290].map((x, index) => (
+            <g key={x} transform={`translate(${x} ${index % 2 ? 13 : 0})`}>
+              <path className="tree-trunk" d="M-5 266 H5 V209 H-5 Z" />
+              <path className="pine-tree" d="M0 166 L-29 220 H-15 L-37 252 H37 L15 220 H29 Z" />
+            </g>
+          ))}
+        </g>
+      )}
+    </svg>
+  )
+}
+
 function ClockFace({ date, sunrise, sunset, moon, onHandDown, interactive = true, animated = false }) {
   const hours = date.getHours()
   const minutes = date.getMinutes()
@@ -542,17 +626,28 @@ function App() {
   })
   const clockWrapRef = useRef(null)
   const dragRef = useRef(null)
-  const manualLocationRef = useRef(false)
+  const locationRequestRef = useRef(0)
 
   const requestCurrentLocation = () => {
+    const requestId = ++locationRequestRef.current
+    const detectedZone = normalizeTimeZone(LOCAL_TIMEZONE)
+    setTimeZone(detectedZone)
+    setLocationName(detectedZone.replaceAll('_', ' '))
+    setSelectedLocation(null)
+    setIsLocationSearchOpen(false)
+    setLocationQuery('')
+    if (!quizStatus) {
+      setIsLive(true)
+      setDisplayTime(getZonedDate(detectedZone))
+    }
     if (!navigator.geolocation) {
       setLocationStatus('Location is not available in this browser')
+      setSunTimes(DEFAULT_SUN)
+      setMoon(getApproxMoon())
+      setWeather(null)
       return
     }
 
-    manualLocationRef.current = false
-    setIsLocationSearchOpen(false)
-    setLocationQuery('')
     setLocationStatus('Finding your current location...')
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
@@ -560,33 +655,39 @@ function App() {
           getSkyData(coords.latitude, coords.longitude),
           getWeatherData(coords.latitude, coords.longitude),
         ])
-        if (manualLocationRef.current) return
+        if (requestId !== locationRequestRef.current) return
         if (weatherResult.status === 'fulfilled') setWeather(weatherResult.value)
         else setWeather(null)
         if (skyResult.status === 'fulfilled') {
           const sky = skyResult.value
-          const detectedZone = normalizeTimeZone(sky.timeZone)
+          const locationZone = normalizeTimeZone(sky.timeZone)
           setSunTimes(sky.sunTimes)
           setMoon(sky.moon)
-          setTimeZone(detectedZone)
-          setLocationName(detectedZone.replaceAll('_', ' '))
+          setTimeZone(locationZone)
+          setLocationName(locationZone.replaceAll('_', ' '))
           setSelectedLocation({
             name: 'Current location',
             country: '',
-            timezone: detectedZone,
+            timezone: locationZone,
             latitude: coords.latitude,
             longitude: coords.longitude,
           })
           if (!quizStatus) {
             setIsLive(true)
-            setDisplayTime(getZonedDate(detectedZone))
+            setDisplayTime(getZonedDate(locationZone))
           }
           setLocationStatus('Daylight matched to your current location')
         } else {
           setLocationStatus('Using a typical day')
         }
       },
-      () => setLocationStatus('Location permission was not available'),
+      () => {
+        if (requestId !== locationRequestRef.current) return
+        setSunTimes(DEFAULT_SUN)
+        setMoon(getApproxMoon())
+        setWeather(null)
+        setLocationStatus('Using your browser timezone with typical daylight')
+      },
       { timeout: 8000, maximumAge: 60 * 60 * 1000 },
     )
   }
@@ -701,6 +802,7 @@ function App() {
 
   const selectLocation = async (location) => {
     if (!location) return
+    const requestId = ++locationRequestRef.current
     const place = {
       name: location.placeName || location.name || 'Selected place',
       admin1: location.admin1 || '',
@@ -709,7 +811,6 @@ function App() {
       latitude: Number(location.latitude),
       longitude: Number(location.longitude),
     }
-    manualLocationRef.current = true
     setTimeZone(place.timezone)
     setLocationName(location.label || `${place.name}${place.admin1 ? `, ${place.admin1}` : ''}`)
     setSelectedLocation(place)
@@ -730,6 +831,7 @@ function App() {
         getWeatherData(place.latitude, place.longitude),
       ])
       : [{ status: 'rejected' }, { status: 'rejected' }]
+    if (requestId !== locationRequestRef.current) return
     if (weatherResult.status === 'fulfilled') setWeather(weatherResult.value)
     else setWeather(null)
     if (skyResult.status === 'fulfilled') {
@@ -903,11 +1005,13 @@ function App() {
   const bestPercent = scorePercents.length
     ? Math.max(...scorePercents)
     : null
+  const biome = getBiome(timeZone, selectedLocation)
 
   return (
     <main className="app" style={{ '--sky-top': skyTop, '--sky-bottom': skyBottom, '--light': lightLevel }}>
       <div className="stars" aria-hidden="true" />
       <WeatherBackground weather={weather} />
+      <Landscape biome={biome} />
       <header className="topbar">
         <a className="brand" href="/" aria-label="Round the Clock home">
           <span className="brand-mark" aria-hidden="true"><i /><i /></span>
