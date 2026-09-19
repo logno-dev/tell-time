@@ -111,9 +111,20 @@ function parseClockTime(value) {
   return hour * 60 + minute
 }
 
+function normalizeTimeZone(value) {
+  if (typeof value !== 'string' || !value) return LOCAL_TIMEZONE
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value }).format()
+    return value
+  } catch {
+    return LOCAL_TIMEZONE
+  }
+}
+
 function getZonedDate(timeZone, instant = new Date()) {
+  const safeTimeZone = normalizeTimeZone(timeZone)
   const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone,
+    timeZone: safeTimeZone,
     year: 'numeric',
     month: 'numeric',
     day: 'numeric',
@@ -304,13 +315,14 @@ function mixColor(from, to, amount) {
 }
 
 function LocationOption({ location, onSelect }) {
+  const locationTimeZone = normalizeTimeZone(location?.timezone)
   return (
     <button type="button" onClick={() => onSelect(location)}>
       <span>
-        <strong>{location.name}</strong>
-        <small>{[location.admin1, location.country].filter(Boolean).join(', ')}</small>
+        <strong>{location?.name || locationTimeZone.replaceAll('_', ' ')}</strong>
+        <small>{[location?.admin1, location?.country].filter(Boolean).join(', ')}</small>
       </span>
-      <em>{location.timezone.replaceAll('_', ' ')}</em>
+      <em>{locationTimeZone.replaceAll('_', ' ')}</em>
     </button>
   )
 }
@@ -502,7 +514,17 @@ function App() {
   const [savedPlaceLabel, setSavedPlaceLabel] = useState('')
   const [savedPlaces, setSavedPlaces] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(SAVED_PLACES_KEY)) || []
+      const storedPlaces = JSON.parse(localStorage.getItem(SAVED_PLACES_KEY))
+      if (!Array.isArray(storedPlaces)) return []
+      return storedPlaces
+        .filter((place) => place && typeof place.label === 'string')
+        .map((place) => ({
+          ...place,
+          name: place.name || place.placeName || 'Saved place',
+          timezone: normalizeTimeZone(place.timezone),
+          latitude: Number(place.latitude),
+          longitude: Number(place.longitude),
+        }))
     } catch {
       return []
     }
@@ -543,7 +565,7 @@ function App() {
         else setWeather(null)
         if (skyResult.status === 'fulfilled') {
           const sky = skyResult.value
-          const detectedZone = sky.timeZone || LOCAL_TIMEZONE
+          const detectedZone = normalizeTimeZone(sky.timeZone)
           setSunTimes(sky.sunTimes)
           setMoon(sky.moon)
           setTimeZone(detectedZone)
@@ -678,13 +700,14 @@ function App() {
   }
 
   const selectLocation = async (location) => {
+    if (!location) return
     const place = {
-      name: location.placeName || location.name,
+      name: location.placeName || location.name || 'Selected place',
       admin1: location.admin1 || '',
       country: location.country || '',
-      timezone: location.timezone,
-      latitude: location.latitude,
-      longitude: location.longitude,
+      timezone: normalizeTimeZone(location.timezone),
+      latitude: Number(location.latitude),
+      longitude: Number(location.longitude),
     }
     manualLocationRef.current = true
     setTimeZone(place.timezone)
@@ -700,10 +723,13 @@ function App() {
       setDisplayTime(getZonedDate(place.timezone))
     }
 
-    const [skyResult, weatherResult] = await Promise.allSettled([
-      getSkyData(place.latitude, place.longitude),
-      getWeatherData(place.latitude, place.longitude),
-    ])
+    const hasCoordinates = Number.isFinite(place.latitude) && Number.isFinite(place.longitude)
+    const [skyResult, weatherResult] = hasCoordinates
+      ? await Promise.allSettled([
+        getSkyData(place.latitude, place.longitude),
+        getWeatherData(place.latitude, place.longitude),
+      ])
+      : [{ status: 'rejected' }, { status: 'rejected' }]
     if (weatherResult.status === 'fulfilled') setWeather(weatherResult.value)
     else setWeather(null)
     if (skyResult.status === 'fulfilled') {
