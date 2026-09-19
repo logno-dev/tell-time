@@ -506,8 +506,69 @@ button { color: inherit; }
 .moon-light { fill: #fff3c9; }
 .moon-crater { fill: #b9ae8f; opacity: .48; }
 
+.weather-background {
+  position: absolute;
+  z-index: 0;
+  top: 76px;
+  left: 0;
+  width: 100%;
+  height: min(66vh, 680px);
+  overflow: hidden;
+  pointer-events: none;
+}
+.weather-cloud {
+  fill: #d8e1e3;
+  opacity: .58;
+  transform-box: view-box;
+  transform-origin: center;
+  animation: cloud-drift 7s ease-in-out infinite alternate;
+}
+.weather-cloud--two { fill: #b8c5ca; opacity: .48; animation-delay: -3s; animation-duration: 9s; }
+.weather-visual--partly-cloudy .weather-cloud { fill: #eef1eb; opacity: .62; }
+.weather-visual--overcast .weather-cloud,
+.weather-visual--cloudy .weather-cloud { fill: #9eabb0; opacity: .67; }
+.weather-visual--storm .weather-cloud { fill: #68757c; opacity: .76; }
+.weather-rain { stroke: #5d8fa8; stroke-width: 2.4; stroke-linecap: round; }
+.weather-rain line { animation: rain-fall 650ms linear infinite; }
+.weather-rain line:nth-child(even) { animation-delay: -320ms; }
+.weather-snow { fill: #fff; }
+.weather-snow circle { animation: snow-fall 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.weather-snow circle:nth-child(even) { animation-delay: -1.3s; }
+.weather-fog { fill: none; stroke: #aab8bb; stroke-width: 8; stroke-linecap: round; opacity: .36; }
+.weather-fog path { animation: fog-drift 6s ease-in-out infinite alternate; transform-box: view-box; }
+.weather-fog path:nth-child(2) { animation-delay: -2s; }
+.weather-fog path:nth-child(3) { animation-delay: -4s; }
+.weather-lightning { fill: #ffcf58; opacity: 0; animation: lightning-flash 5s linear infinite; }
+
 @keyframes moon-pulse {
   50% { opacity: .68; transform: scale(1.12); }
+}
+
+@keyframes cloud-drift {
+  from { transform: translateX(-4px); }
+  to { transform: translateX(7px); }
+}
+
+@keyframes rain-fall {
+  from { transform: translateY(-4px); opacity: 0; }
+  30% { opacity: .75; }
+  to { transform: translateY(8px); opacity: 0; }
+}
+
+@keyframes snow-fall {
+  0% { transform: translate(-2px, -5px) scale(.8); opacity: 0; }
+  35% { opacity: .9; }
+  100% { transform: translate(3px, 8px) scale(1.1); opacity: 0; }
+}
+
+@keyframes fog-drift {
+  from { transform: translateX(-8px); }
+  to { transform: translateX(8px); }
+}
+
+@keyframes lightning-flash {
+  0%, 82%, 87%, 100% { opacity: 0; }
+  83%, 85% { opacity: .95; }
 }
 
 .hand-target { cursor: grab; outline: none; transform-box: view-box; transform-origin: 200px 200px; }
@@ -569,6 +630,28 @@ button { color: inherit; }
 }
 .period-indicator small { font: 500 7px 'DM Mono', monospace; letter-spacing: .12em; opacity: .62; }
 .period-indicator strong { color: #ffe0a0; font: 600 16px 'DM Mono', monospace; }
+
+.weather-indicator {
+  position: absolute;
+  z-index: 2;
+  top: 17%;
+  left: -29px;
+  min-width: 72px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / .55);
+  border-radius: 12px;
+  background: rgb(48 59 74 / .72);
+  box-shadow: 0 8px 25px rgb(29 34 48 / .16);
+  color: white;
+  text-align: center;
+  backdrop-filter: blur(9px);
+}
+.weather-indicator small { font: 500 7px 'DM Mono', monospace; letter-spacing: .12em; opacity: .62; }
+.weather-indicator strong { color: #ffe0a0; font: 600 14px 'DM Mono', monospace; }
+.weather-indicator span { max-width: 70px; margin-top: 1px; font-size: 9px; line-height: 1.05; }
 
 .quiz-card {
   width: min(100%, 730px);
@@ -869,6 +952,7 @@ footer {
 
 @media (max-width: 760px) {
   .topbar { height: 64px; padding: 0 16px; }
+  .weather-background { top: 64px; height: 58vh; }
   .brand span:last-child { display: none; }
   .timezone-picker .location-pill { width: min(66vw, 260px); }
   .lesson { padding-top: 30px; }
@@ -910,6 +994,8 @@ footer {
   .quiz-hud { width: 100%; min-width: 0; gap: 17px; padding-left: 13px; }
   .clock-stage { margin-top: 12px; }
   .period-indicator { top: 11%; right: 1px; min-width: 52px; padding: 6px 8px; }
+  .weather-indicator { top: 11%; left: 1px; min-width: 59px; padding: 6px; }
+  .weather-indicator span { max-width: 58px; font-size: 8px; }
   .clock-stage--quiz { width: min(88vw, 380px); }
   .drag-hint { margin-top: 0; }
   .quiz-card { margin-top: 8px; padding: 18px 14px; border-radius: 18px; }

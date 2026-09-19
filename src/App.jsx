@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 
 const DEFAULT_SUN = { sunrise: 6 * 60 + 30, sunset: 19 * 60 + 30 }
 const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
+const WEATHER_UNIT = navigator.language === 'en-US' ? 'fahrenheit' : 'celsius'
+const weatherCache = new Map()
 const NUMBER_WORDS = [
   'twelve', 'one', 'two', 'three', 'four', 'five', 'six',
   'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve',
@@ -158,6 +160,46 @@ async function getSkyData(latitude, longitude) {
   }
 }
 
+function describeWeather(code) {
+  if (code === 0) return { kind: 'clear', label: 'Clear sky' }
+  if (code <= 2) return { kind: 'partly-cloudy', label: 'Partly cloudy' }
+  if (code === 3) return { kind: 'overcast', label: 'Overcast' }
+  if (code === 45 || code === 48) return { kind: 'fog', label: 'Foggy' }
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return { kind: 'rain', label: code >= 80 ? 'Rain showers' : 'Rainy' }
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return { kind: 'snow', label: 'Snowy' }
+  if (code >= 95) return { kind: 'storm', label: 'Thunderstorms' }
+  return { kind: 'cloudy', label: 'Cloudy' }
+}
+
+async function getWeatherData(latitude, longitude) {
+  const cacheKey = `${latitude.toFixed(2)},${longitude.toFixed(2)},${WEATHER_UNIT}`
+  const cached = weatherCache.get(cacheKey)
+  if (cached && Date.now() - cached.createdAt < 10 * 60 * 1000) return cached.weather
+
+  const params = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    current: 'temperature_2m,weather_code,cloud_cover,precipitation,rain,snowfall,wind_speed_10m',
+    temperature_unit: WEATHER_UNIT,
+    timezone: 'auto',
+  })
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`)
+  if (!response.ok) throw new Error('Weather service unavailable')
+  const data = await response.json()
+  const current = data.current
+  if (!current || !Number.isFinite(current.weather_code)) throw new Error('Invalid weather data')
+  const description = describeWeather(current.weather_code)
+  const weather = {
+    ...description,
+    temperature: current.temperature_2m,
+    unit: WEATHER_UNIT === 'fahrenheit' ? 'F' : 'C',
+    cloudCover: current.cloud_cover,
+    windSpeed: current.wind_speed_10m,
+  }
+  weatherCache.set(cacheKey, { createdAt: Date.now(), weather })
+  return weather
+}
+
 function numberToWords(number) {
   if (number < 20) return SMALL_NUMBERS[number]
   const tens = ['twenty', 'thirty', 'forty', 'fifty'][Math.floor(number / 10) - 2]
@@ -270,6 +312,49 @@ function LocationOption({ location, onSelect }) {
       </span>
       <em>{location.timezone.replaceAll('_', ' ')}</em>
     </button>
+  )
+}
+
+function WeatherBackground({ weather }) {
+  if (!weather || weather.kind === 'clear') return null
+  const hasClouds = !['fog'].includes(weather.kind)
+  const precipitation = ['rain', 'storm'].includes(weather.kind)
+
+  return (
+    <svg className={`weather-background weather-visual--${weather.kind}`} viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      {hasClouds && (
+        <>
+          <g className="weather-cloud weather-cloud--one">
+            <path d="M22 175 C25 135 58 109 99 115 C118 71 181 68 204 115 C251 103 292 135 289 178 Z" />
+          </g>
+          <g className="weather-cloud weather-cloud--two">
+            <path d="M858 138 C859 103 887 79 922 84 C939 46 992 45 1013 84 C1054 74 1091 102 1088 141 Z" />
+          </g>
+        </>
+      )}
+      {precipitation && (
+        <g className="weather-rain">
+          {[62, 103, 144, 185, 226, 897, 938, 979, 1020, 1061].map((x, index) => (
+            <line key={x} x1={x} y1={index < 5 ? 190 : 153} x2={x - 9} y2={index < 5 ? 224 : 187} />
+          ))}
+        </g>
+      )}
+      {weather.kind === 'snow' && (
+        <g className="weather-snow">
+          {[[55, 193], [102, 218], [150, 190], [199, 221], [247, 195], [892, 158], [941, 183], [990, 158], [1040, 185]].map(([x, y]) => (
+            <circle key={`${x}-${y}`} cx={x} cy={y} r="5" />
+          ))}
+        </g>
+      )}
+      {weather.kind === 'fog' && (
+        <g className="weather-fog">
+          <path d="M-30 156 C166 102 342 189 530 145 C718 101 886 168 1230 99" />
+          <path d="M-45 221 C158 166 351 249 545 204 C741 159 930 224 1245 163" />
+          <path d="M-20 286 C178 237 370 310 558 271 C754 229 947 282 1220 233" />
+        </g>
+      )}
+      {weather.kind === 'storm' && <path className="weather-lightning" d="M186 177 L151 245 L183 238 L159 300 L226 217 L192 223 Z" />}
+    </svg>
   )
 }
 
@@ -407,6 +492,7 @@ function App() {
   const [isAnswerVisible, setIsAnswerVisible] = useState(false)
   const [sunTimes, setSunTimes] = useState(DEFAULT_SUN)
   const [moon, setMoon] = useState(() => getApproxMoon())
+  const [weather, setWeather] = useState(null)
   const [locationStatus, setLocationStatus] = useState('Finding your sky...')
   const [locationQuery, setLocationQuery] = useState('')
   const [locationResults, setLocationResults] = useState([])
@@ -448,9 +534,15 @@ function App() {
     setLocationStatus('Finding your current location...')
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
-        try {
-          const sky = await getSkyData(coords.latitude, coords.longitude)
-          if (manualLocationRef.current) return
+        const [skyResult, weatherResult] = await Promise.allSettled([
+          getSkyData(coords.latitude, coords.longitude),
+          getWeatherData(coords.latitude, coords.longitude),
+        ])
+        if (manualLocationRef.current) return
+        if (weatherResult.status === 'fulfilled') setWeather(weatherResult.value)
+        else setWeather(null)
+        if (skyResult.status === 'fulfilled') {
+          const sky = skyResult.value
           const detectedZone = sky.timeZone || LOCAL_TIMEZONE
           setSunTimes(sky.sunTimes)
           setMoon(sky.moon)
@@ -468,7 +560,7 @@ function App() {
             setDisplayTime(getZonedDate(detectedZone))
           }
           setLocationStatus('Daylight matched to your current location')
-        } catch {
+        } else {
           setLocationStatus('Using a typical day')
         }
       },
@@ -608,12 +700,18 @@ function App() {
       setDisplayTime(getZonedDate(place.timezone))
     }
 
-    try {
-      const sky = await getSkyData(place.latitude, place.longitude)
+    const [skyResult, weatherResult] = await Promise.allSettled([
+      getSkyData(place.latitude, place.longitude),
+      getWeatherData(place.latitude, place.longitude),
+    ])
+    if (weatherResult.status === 'fulfilled') setWeather(weatherResult.value)
+    else setWeather(null)
+    if (skyResult.status === 'fulfilled') {
+      const sky = skyResult.value
       setSunTimes(sky.sunTimes)
       setMoon(sky.moon)
       setLocationStatus(`Daylight matched to ${place.name}`)
-    } catch {
+    } else {
       setSunTimes(DEFAULT_SUN)
       setMoon(getApproxMoon())
       setLocationStatus(`Showing ${place.name} with typical daylight`)
@@ -783,6 +881,7 @@ function App() {
   return (
     <main className="app" style={{ '--sky-top': skyTop, '--sky-bottom': skyBottom, '--light': lightLevel }}>
       <div className="stars" aria-hidden="true" />
+      <WeatherBackground weather={weather} />
       <header className="topbar">
         <a className="brand" href="/" aria-label="Round the Clock home">
           <span className="brand-mark" aria-hidden="true"><i /><i /></span>
@@ -1058,6 +1157,13 @@ function App() {
               interactive={!quizStatus}
               animated={quizStatus === 'active'}
             />
+            {weather && (
+              <div className="weather-indicator" aria-label={`${weather.label}, ${Math.round(weather.temperature)} degrees ${weather.unit}`}>
+                <small>NOW</small>
+                <strong>{Math.round(weather.temperature)}°{weather.unit}</strong>
+                <span>{weather.label}</span>
+              </div>
+            )}
             <div className="period-indicator" aria-label={`${displayTime.getHours() < 12 ? 'AM' : 'PM'} period`}>
               <small>PERIOD</small>
               <strong>{displayTime.getHours() < 12 ? 'AM' : 'PM'}</strong>
@@ -1162,7 +1268,7 @@ function App() {
 
       <footer>
         <span>{locationStatus}</span>
-        <span>Daylight data by SunriseSunset.io</span>
+        <span>Daylight by SunriseSunset.io / Weather by Open-Meteo</span>
       </footer>
     </main>
   )
