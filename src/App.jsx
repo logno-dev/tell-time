@@ -38,6 +38,46 @@ const QUIZ_OPTIONS = {
     { value: 'total30', label: '30-second sprint', detail: 'Answer all you can' },
   ],
 }
+const MAJOR_TIMEZONES = [
+  { id: 'us-eastern', name: 'New York', country: 'United States', region: 'US timezones', timezone: 'America/New_York', latitude: 40.7128, longitude: -74.006 },
+  { id: 'us-central', name: 'Chicago', country: 'United States', region: 'US timezones', timezone: 'America/Chicago', latitude: 41.8781, longitude: -87.6298 },
+  { id: 'us-mountain', name: 'Denver', country: 'United States', region: 'US timezones', timezone: 'America/Denver', latitude: 39.7392, longitude: -104.9903 },
+  { id: 'us-arizona', name: 'Phoenix', country: 'United States', region: 'US timezones', timezone: 'America/Phoenix', latitude: 33.4484, longitude: -112.074 },
+  { id: 'us-pacific', name: 'Los Angeles', country: 'United States', region: 'US timezones', timezone: 'America/Los_Angeles', latitude: 34.0522, longitude: -118.2437 },
+  { id: 'us-alaska', name: 'Anchorage', country: 'United States', region: 'US timezones', timezone: 'America/Anchorage', latitude: 61.2181, longitude: -149.9003 },
+  { id: 'us-aleutian', name: 'Adak', country: 'United States', region: 'US timezones', timezone: 'America/Adak', latitude: 51.88, longitude: -176.6581 },
+  { id: 'us-hawaii', name: 'Honolulu', country: 'United States', region: 'US timezones', timezone: 'Pacific/Honolulu', latitude: 21.3099, longitude: -157.8581 },
+  { id: 'us-atlantic', name: 'San Juan', country: 'Puerto Rico', region: 'US timezones', timezone: 'America/Puerto_Rico', latitude: 18.4655, longitude: -66.1057 },
+  { id: 'us-samoa', name: 'Pago Pago', country: 'American Samoa', region: 'US timezones', timezone: 'Pacific/Pago_Pago', latitude: -14.2756, longitude: -170.702 },
+  { id: 'us-chamorro', name: 'Hagatna', country: 'Guam', region: 'US timezones', timezone: 'Pacific/Guam', latitude: 13.4757, longitude: 144.7489 },
+  { id: 'eu-london', name: 'London', country: 'United Kingdom', region: 'Europe', timezone: 'Europe/London', latitude: 51.5072, longitude: -0.1276 },
+  { id: 'eu-lisbon', name: 'Lisbon', country: 'Portugal', region: 'Europe', timezone: 'Europe/Lisbon', latitude: 38.7223, longitude: -9.1393 },
+  { id: 'eu-paris', name: 'Paris', country: 'France', region: 'Europe', timezone: 'Europe/Paris', latitude: 48.8566, longitude: 2.3522 },
+  { id: 'eu-berlin', name: 'Berlin', country: 'Germany', region: 'Europe', timezone: 'Europe/Berlin', latitude: 52.52, longitude: 13.405 },
+  { id: 'eu-athens', name: 'Athens', country: 'Greece', region: 'Europe', timezone: 'Europe/Athens', latitude: 37.9838, longitude: 23.7275 },
+  { id: 'eu-moscow', name: 'Moscow', country: 'Russia', region: 'Europe', timezone: 'Europe/Moscow', latitude: 55.7558, longitude: 37.6173 },
+  { id: 'sa-sao-paulo', name: 'Sao Paulo', country: 'Brazil', region: 'South America', timezone: 'America/Sao_Paulo', latitude: -23.5505, longitude: -46.6333 },
+  { id: 'sa-buenos-aires', name: 'Buenos Aires', country: 'Argentina', region: 'South America', timezone: 'America/Argentina/Buenos_Aires', latitude: -34.6037, longitude: -58.3816 },
+  { id: 'sa-santiago', name: 'Santiago', country: 'Chile', region: 'South America', timezone: 'America/Santiago', latitude: -33.4489, longitude: -70.6693 },
+  { id: 'sa-bogota', name: 'Bogota', country: 'Colombia', region: 'South America', timezone: 'America/Bogota', latitude: 4.711, longitude: -74.0721 },
+  { id: 'sa-lima', name: 'Lima', country: 'Peru', region: 'South America', timezone: 'America/Lima', latitude: -12.0464, longitude: -77.0428 },
+  { id: 'sa-caracas', name: 'Caracas', country: 'Venezuela', region: 'South America', timezone: 'America/Caracas', latitude: 10.4806, longitude: -66.9036 },
+  { id: 'asia-tokyo', name: 'Tokyo', country: 'Japan', region: 'Asia', timezone: 'Asia/Tokyo', latitude: 35.6762, longitude: 139.6503 },
+  { id: 'asia-shanghai', name: 'Shanghai', country: 'China', region: 'Asia', timezone: 'Asia/Shanghai', latitude: 31.2304, longitude: 121.4737 },
+  { id: 'asia-hong-kong', name: 'Hong Kong', country: 'Hong Kong', region: 'Asia', timezone: 'Asia/Hong_Kong', latitude: 22.3193, longitude: 114.1694 },
+  { id: 'asia-singapore', name: 'Singapore', country: 'Singapore', region: 'Asia', timezone: 'Asia/Singapore', latitude: 1.3521, longitude: 103.8198 },
+  { id: 'asia-seoul', name: 'Seoul', country: 'South Korea', region: 'Asia', timezone: 'Asia/Seoul', latitude: 37.5665, longitude: 126.978 },
+  { id: 'asia-delhi', name: 'Delhi', country: 'India', region: 'Asia', timezone: 'Asia/Kolkata', latitude: 28.6139, longitude: 77.209 },
+  { id: 'asia-dubai', name: 'Dubai', country: 'United Arab Emirates', region: 'Asia', timezone: 'Asia/Dubai', latitude: 25.2048, longitude: 55.2708 },
+  { id: 'asia-bangkok', name: 'Bangkok', country: 'Thailand', region: 'Asia', timezone: 'Asia/Bangkok', latitude: 13.7563, longitude: 100.5018 },
+  { id: 'af-cairo', name: 'Cairo', country: 'Egypt', region: 'Africa', timezone: 'Africa/Cairo', latitude: 30.0444, longitude: 31.2357 },
+  { id: 'af-lagos', name: 'Lagos', country: 'Nigeria', region: 'Africa', timezone: 'Africa/Lagos', latitude: 6.5244, longitude: 3.3792 },
+  { id: 'af-nairobi', name: 'Nairobi', country: 'Kenya', region: 'Africa', timezone: 'Africa/Nairobi', latitude: -1.2921, longitude: 36.8219 },
+  { id: 'af-johannesburg', name: 'Johannesburg', country: 'South Africa', region: 'Africa', timezone: 'Africa/Johannesburg', latitude: -26.2041, longitude: 28.0473 },
+  { id: 'af-casablanca', name: 'Casablanca', country: 'Morocco', region: 'Africa', timezone: 'Africa/Casablanca', latitude: 33.5731, longitude: -7.5898 },
+  { id: 'oc-sydney', name: 'Sydney', country: 'Australia', region: 'Oceania', timezone: 'Australia/Sydney', latitude: -33.8688, longitude: 151.2093 },
+  { id: 'oc-auckland', name: 'Auckland', country: 'New Zealand', region: 'Oceania', timezone: 'Pacific/Auckland', latitude: -36.8509, longitude: 174.7645 },
+]
 
 function getApproxMoon(date = new Date()) {
   const lunarCycle = 29.53058867
@@ -220,6 +260,18 @@ function mixColor(from, to, amount) {
   return `rgb(${value(0)} ${value(1)} ${value(2)})`
 }
 
+function LocationOption({ location, onSelect }) {
+  return (
+    <button type="button" onClick={() => onSelect(location)}>
+      <span>
+        <strong>{location.name}</strong>
+        <small>{[location.admin1, location.country].filter(Boolean).join(', ')}</small>
+      </span>
+      <em>{location.timezone.replaceAll('_', ' ')}</em>
+    </button>
+  )
+}
+
 function ClockFace({ date, sunrise, sunset, moon, onHandDown, interactive = true, animated = false }) {
   const hours = date.getHours()
   const minutes = date.getMinutes()
@@ -374,6 +426,40 @@ function App() {
   const dragRef = useRef(null)
   const manualLocationRef = useRef(false)
 
+  const requestCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('Location is not available in this browser')
+      return
+    }
+
+    manualLocationRef.current = false
+    setIsLocationSearchOpen(false)
+    setLocationQuery('')
+    setLocationStatus('Finding your current location...')
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const sky = await getSkyData(coords.latitude, coords.longitude)
+          if (manualLocationRef.current) return
+          const detectedZone = sky.timeZone || LOCAL_TIMEZONE
+          setSunTimes(sky.sunTimes)
+          setMoon(sky.moon)
+          setTimeZone(detectedZone)
+          setLocationName(detectedZone.replaceAll('_', ' '))
+          if (!quizStatus) {
+            setIsLive(true)
+            setDisplayTime(getZonedDate(detectedZone))
+          }
+          setLocationStatus('Daylight matched to your current location')
+        } catch {
+          setLocationStatus('Using a typical day')
+        }
+      },
+      () => setLocationStatus('Location permission was not available'),
+      { timeout: 8000, maximumAge: 60 * 60 * 1000 },
+    )
+  }
+
   useEffect(() => {
     if (!isLive) return undefined
     const update = () => setDisplayTime(getZonedDate(timeZone))
@@ -383,27 +469,7 @@ function App() {
   }, [isLive, timeZone])
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setLocationStatus('Using a typical day')
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        try {
-          const sky = await getSkyData(coords.latitude, coords.longitude)
-          if (manualLocationRef.current) return
-          setSunTimes(sky.sunTimes)
-          setMoon(sky.moon)
-          if (sky.timeZone) setTimeZone(sky.timeZone)
-          setLocationStatus('Daylight matched to your location')
-        } catch {
-          setLocationStatus('Using a typical day')
-        }
-      },
-      () => setLocationStatus('Using a typical day'),
-      { timeout: 8000, maximumAge: 60 * 60 * 1000 },
-    )
+    requestCurrentLocation()
   }, [])
 
   useEffect(() => {
@@ -667,29 +733,57 @@ function App() {
             if (!event.currentTarget.contains(event.relatedTarget)) setIsLocationSearchOpen(false)
           }}
         >
-          <label className="location-pill" title={locationStatus}>
+          <div className="location-pill" title={locationStatus}>
             <span className="location-dot" aria-hidden="true" />
-            <span className="visually-hidden">Search for a city or timezone</span>
+            <label className="visually-hidden" htmlFor="timezone-search">Search for a city or timezone</label>
             <input
+              id="timezone-search"
               type="search"
               value={locationQuery}
               placeholder={locationName}
               onChange={(event) => setLocationQuery(event.target.value)}
-              aria-expanded={isLocationSearchOpen && locationQuery.trim().length >= 2}
+              aria-expanded={isLocationSearchOpen}
               aria-controls="location-results"
             />
-            <span className="search-mark" aria-hidden="true" />
-          </label>
-          {isLocationSearchOpen && locationQuery.trim().length >= 2 && (
+            <button
+              className="current-location-button"
+              type="button"
+              title="Use my current location"
+              aria-label="Use my current location and timezone"
+              onClick={requestCurrentLocation}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="2" x2="5" y1="12" y2="12" />
+                <line x1="19" x2="22" y1="12" y2="12" />
+                <line x1="12" x2="12" y1="2" y2="5" />
+                <line x1="12" x2="12" y1="19" y2="22" />
+                <circle cx="12" cy="12" r="7" />
+              </svg>
+            </button>
+          </div>
+          {isLocationSearchOpen && (
             <div className="location-results" id="location-results">
-              {isLocationSearching && <p>Searching the world...</p>}
-              {!isLocationSearching && locationResults.length === 0 && <p>No matching places yet</p>}
-              {locationResults.map((location) => (
-                <button key={location.id} type="button" onClick={() => selectLocation(location)}>
-                  <span><strong>{location.name}</strong><small>{[location.admin1, location.country].filter(Boolean).join(', ')}</small></span>
-                  <em>{location.timezone.replaceAll('_', ' ')}</em>
-                </button>
-              ))}
+              {locationQuery.trim().length < 2 ? (
+                <>
+                  <p className="location-results-title">MAJOR TIMEZONES</p>
+                  {[...new Set(MAJOR_TIMEZONES.map((location) => location.region))].map((region) => (
+                    <section className="timezone-group" key={region}>
+                      <h2>{region}</h2>
+                      {MAJOR_TIMEZONES.filter((location) => location.region === region).map((location) => (
+                        <LocationOption key={location.id} location={location} onSelect={selectLocation} />
+                      ))}
+                    </section>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {isLocationSearching && <p>Searching the world...</p>}
+                  {!isLocationSearching && locationResults.length === 0 && <p>No matching places yet</p>}
+                  {locationResults.map((location) => (
+                    <LocationOption key={location.id} location={location} onSelect={selectLocation} />
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
