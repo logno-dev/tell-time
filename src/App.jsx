@@ -12,6 +12,7 @@ const SMALL_NUMBERS = [
   'seventeen', 'eighteen', 'nineteen',
 ]
 const SCORE_KEY = 'round-the-clock-scores'
+const SAVED_PLACES_KEY = 'round-the-clock-saved-places'
 const DEFAULT_QUIZ_CONFIG = {
   increment: 15,
   format: 'digital',
@@ -411,6 +412,15 @@ function App() {
   const [locationResults, setLocationResults] = useState([])
   const [isLocationSearchOpen, setIsLocationSearchOpen] = useState(false)
   const [isLocationSearching, setIsLocationSearching] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState(null)
+  const [savedPlaceLabel, setSavedPlaceLabel] = useState('')
+  const [savedPlaces, setSavedPlaces] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(SAVED_PLACES_KEY)) || []
+    } catch {
+      return []
+    }
+  })
   const [quizStatus, setQuizStatus] = useState(null)
   const [quizConfig, setQuizConfig] = useState(DEFAULT_QUIZ_CONFIG)
   const [quiz, setQuiz] = useState(null)
@@ -446,6 +456,13 @@ function App() {
           setMoon(sky.moon)
           setTimeZone(detectedZone)
           setLocationName(detectedZone.replaceAll('_', ' '))
+          setSelectedLocation({
+            name: 'Current location',
+            country: '',
+            timezone: detectedZone,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          })
           if (!quizStatus) {
             setIsLive(true)
             setDisplayTime(getZonedDate(detectedZone))
@@ -569,28 +586,73 @@ function App() {
   }
 
   const selectLocation = async (location) => {
+    const place = {
+      name: location.placeName || location.name,
+      admin1: location.admin1 || '',
+      country: location.country || '',
+      timezone: location.timezone,
+      latitude: location.latitude,
+      longitude: location.longitude,
+    }
     manualLocationRef.current = true
-    setTimeZone(location.timezone)
-    setLocationName(`${location.name}${location.admin1 ? `, ${location.admin1}` : ''}`)
+    setTimeZone(place.timezone)
+    setLocationName(location.label || `${place.name}${place.admin1 ? `, ${place.admin1}` : ''}`)
+    setSelectedLocation(place)
+    setSavedPlaceLabel('')
     setLocationQuery('')
     setLocationResults([])
     setIsLocationSearchOpen(false)
-    setLocationStatus(`Loading the sky over ${location.name}...`)
+    setLocationStatus(`Loading the sky over ${place.name}...`)
     if (!quizStatus) {
       setIsLive(true)
-      setDisplayTime(getZonedDate(location.timezone))
+      setDisplayTime(getZonedDate(place.timezone))
     }
 
     try {
-      const sky = await getSkyData(location.latitude, location.longitude)
+      const sky = await getSkyData(place.latitude, place.longitude)
       setSunTimes(sky.sunTimes)
       setMoon(sky.moon)
-      setLocationStatus(`Daylight matched to ${location.name}`)
+      setLocationStatus(`Daylight matched to ${place.name}`)
     } catch {
       setSunTimes(DEFAULT_SUN)
       setMoon(getApproxMoon())
-      setLocationStatus(`Showing ${location.name} with typical daylight`)
+      setLocationStatus(`Showing ${place.name} with typical daylight`)
     }
+  }
+
+  const saveSelectedLocation = () => {
+    const label = savedPlaceLabel.trim()
+    if (!selectedLocation || !label) return
+    const savedPlace = {
+      ...selectedLocation,
+      id: `${Date.now()}-${selectedLocation.timezone}`,
+      label,
+      placeName: selectedLocation.name,
+    }
+    setSavedPlaces((current) => {
+      const next = [savedPlace, ...current.filter((place) => place.label.toLowerCase() !== label.toLowerCase())].slice(0, 12)
+      try {
+        localStorage.setItem(SAVED_PLACES_KEY, JSON.stringify(next))
+      } catch {
+        // Saved places still remain available for the current session.
+      }
+      return next
+    })
+    setLocationName(label)
+    setSavedPlaceLabel('')
+    setLocationStatus(`${selectedLocation.name} saved as ${label}`)
+  }
+
+  const removeSavedPlace = (id) => {
+    setSavedPlaces((current) => {
+      const next = current.filter((place) => place.id !== id)
+      try {
+        localStorage.setItem(SAVED_PLACES_KEY, JSON.stringify(next))
+      } catch {
+        // Saved places still remain available for the current session.
+      }
+      return next
+    })
   }
 
   const openQuizSetup = () => {
@@ -765,6 +827,30 @@ function App() {
             <div className="location-results" id="location-results">
               {locationQuery.trim().length < 2 ? (
                 <>
+                  {selectedLocation && (
+                    <form
+                      className="save-place-form"
+                      onSubmit={(event) => {
+                        event.preventDefault()
+                        saveSelectedLocation()
+                      }}
+                    >
+                      <div>
+                        <strong>Save this place</strong>
+                        <small>{selectedLocation.name} / {selectedLocation.timezone.replaceAll('_', ' ')}</small>
+                      </div>
+                      <label>
+                        <span className="visually-hidden">Custom label for this place</span>
+                        <input
+                          value={savedPlaceLabel}
+                          placeholder="Custom label"
+                          maxLength="30"
+                          onChange={(event) => setSavedPlaceLabel(event.target.value)}
+                        />
+                      </label>
+                      <button type="submit" disabled={!savedPlaceLabel.trim()}>SAVE</button>
+                    </form>
+                  )}
                   <p className="location-results-title">MAJOR TIMEZONES</p>
                   {[...new Set(MAJOR_TIMEZONES.map((location) => location.region))].map((region) => (
                     <section className="timezone-group" key={region}>
@@ -788,6 +874,29 @@ function App() {
           )}
         </div>
       </header>
+
+      {savedPlaces.length > 0 && (
+        <nav className="saved-timezones" aria-label="Saved timezones">
+          <span>SAVED</span>
+          <div>
+            {savedPlaces.map((place) => (
+              <article className="saved-timezone-pill" key={place.id}>
+                <button type="button" onClick={() => selectLocation(place)}>
+                  <strong>{place.label}</strong>
+                  <small>{formatTime(getZonedDate(place.timezone))}</small>
+                </button>
+                <button
+                  className="remove-saved-place"
+                  type="button"
+                  title={`Remove ${place.label}`}
+                  aria-label={`Remove saved timezone ${place.label}`}
+                  onClick={() => removeSavedPlace(place.id)}
+                >&times;</button>
+              </article>
+            ))}
+          </div>
+        </nav>
+      )}
 
       <section className={`lesson ${!quizStatus ? 'lesson--explore' : ''}`} aria-labelledby="page-title">
         <div className="intro">

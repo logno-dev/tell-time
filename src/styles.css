@@ -77,7 +77,7 @@ button { color: inherit; }
   border-bottom: 1px solid rgb(255 255 255 / .32);
   color: white;
   position: relative;
-  z-index: 2;
+  z-index: 10;
 }
 
 .brand {
@@ -210,6 +210,109 @@ button { color: inherit; }
 .location-results strong { font-size: 13px; }
 .location-results small { overflow: hidden; color: #817665; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .location-results em { max-width: 145px; color: #827764; font: 400 9px 'DM Mono', monospace; font-style: normal; text-align: right; }
+
+.save-place-form {
+  margin: 2px 2px 9px;
+  padding: 11px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  border-radius: 11px;
+  background: #3f5663;
+  color: white;
+}
+.save-place-form > div { min-width: 0; display: flex; flex-direction: column; }
+.save-place-form > div strong { font-size: 12px; }
+.save-place-form > div small { overflow: hidden; color: rgb(255 255 255 / .62); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.save-place-form label { grid-column: 1; }
+.save-place-form input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgb(255 255 255 / .25);
+  border-radius: 8px;
+  outline: 0;
+  background: rgb(255 255 255 / .1);
+  color: white;
+  font: 500 11px 'DM Mono', monospace;
+}
+.save-place-form input::placeholder { color: rgb(255 255 255 / .48); }
+.save-place-form input:focus { border-color: #ffda8a; }
+.location-results .save-place-form > button {
+  grid-column: 2;
+  width: auto;
+  min-width: 54px;
+  height: 34px;
+  padding: 0 10px;
+  justify-content: center;
+  border-radius: 8px;
+  background: #ffda8a;
+  color: #4a3c25;
+  font: 600 9px 'DM Mono', monospace;
+  letter-spacing: .08em;
+}
+.location-results .save-place-form > button:hover:not(:disabled) { background: #ffe5a9; }
+.location-results .save-place-form > button:disabled { cursor: default; opacity: .45; }
+
+.saved-timezones {
+  width: 172px;
+  max-height: calc(100vh - 112px);
+  padding: 9px;
+  position: fixed;
+  z-index: 5;
+  top: 92px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgb(255 255 255 / .3);
+  border-radius: 14px;
+  color: white;
+  background: rgb(24 33 55 / .2);
+  box-shadow: 0 12px 35px rgb(22 30 46 / .14);
+  backdrop-filter: blur(12px);
+}
+.saved-timezones > span { align-self: flex-start; margin: 1px 4px 2px; flex: 0 0 auto; font: 500 8px 'DM Mono', monospace; letter-spacing: .13em; opacity: .62; }
+.saved-timezones > div { width: 100%; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; scrollbar-width: none; }
+.saved-timezones > div::-webkit-scrollbar { display: none; }
+.saved-timezone-pill {
+  width: 100%;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / .35);
+  border-radius: 10px;
+  background: rgb(31 43 61 / .2);
+  overflow: hidden;
+}
+.saved-timezone-pill > button:first-child {
+  min-width: 0;
+  flex: 1;
+  min-height: 33px;
+  padding: 4px 8px 4px 10px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 1px;
+  border: 0;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+}
+.saved-timezone-pill > button:first-child:hover { background: rgb(255 255 255 / .1); }
+.saved-timezone-pill strong { font-size: 11px; white-space: nowrap; }
+.saved-timezone-pill small { color: #ffe0a0; font: 500 9px 'DM Mono', monospace; white-space: nowrap; }
+.remove-saved-place {
+  align-self: stretch;
+  padding: 0 8px;
+  border: 0;
+  border-left: 1px solid rgb(255 255 255 / .17);
+  background: transparent;
+  color: rgb(255 255 255 / .55);
+  cursor: pointer;
+}
+.remove-saved-place:hover { color: white; background: rgb(255 255 255 / .1); }
 
 .location-dot {
   width: 7px;
@@ -779,6 +882,20 @@ footer {
   .question-count { width: 100%; margin-bottom: 5px; }
   .choice-grid { gap: 7px; }
   footer { padding-inline: 20px; }
+  .saved-timezones {
+    width: auto;
+    max-height: none;
+    padding: 7px;
+    top: auto;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    left: 10px;
+    align-items: stretch;
+    flex-direction: row;
+  }
+  .saved-timezones > span { display: none; }
+  .saved-timezones > div { flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+  .saved-timezone-pill { width: auto; min-width: 132px; }
 }
 
 @media (max-width: 480px) {
